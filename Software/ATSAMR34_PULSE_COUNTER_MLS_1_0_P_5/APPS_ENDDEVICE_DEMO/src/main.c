@@ -31,30 +31,32 @@
 * \asf_license_stop
 *
 */
+
 /*
-* Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
-*/
- 
+ * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
+ */
+
 /****************************** INCLUDES **************************************/
+
 #include <asf.h>
 #include "sio2host.h"
 #include "lorawan_app.h"
 #include "pulse_counter.h"
 
-int main(void)
-{
-	system_init() ;
-	delay_init() ;
-	delay_ms(5) ;
-	Enable_global_interrupt() ;
-	sio2host_init() ;
-	pulse_counter_init() ;
-	lorawan_app_init() ;
-	lorawan_app_configuration(ISM_EU868) ;
-	lorawan_app_join() ;
-	while(1)
-	{
-		SYSTEM_RunTasks() ;
-		lorawan_app_sleep() ;
+
+
+int main(void) {
+	system_init();
+	delay_init();
+	delay_ms(5);
+	Enable_global_interrupt();
+	sio2host_init();
+	pulse_counter_init();
+	lorawan_app_init();
+	lorawan_app_configuration(ISM_US915);
+	lorawan_app_join();
+	while (1) {
+		SYSTEM_RunTasks();
+		lorawan_app_sleep();
 	}
 }
