@@ -1,6 +1,9 @@
 // m16946
+
 /****************************** INCLUDES **************************************/
+
 /*** INCLUDE FILES ************************************************************/
+
 #include <asf.h>
 #include "lorawan_app.h"
 #include "system_low_power.h"
@@ -12,18 +15,22 @@
 #include "aes_engine.h"
 #include "sio2host.h"
 #include "sw_timer.h"
+
 #ifdef CONF_PMM_ENABLE
-  #include "pmm.h"
-  #include  "conf_pmm.h"
-  #include "sleep_timer.h"
-  #include "sleep.h"
+#include "pmm.h"
+#include "conf_pmm.h"
+#include "sleep_timer.h"
+#include "sleep.h"
 #endif
+
 #include "conf_sio2host.h"
+
 #if (ENABLE_PDS == 1)
-  #include "pds_interface.h"
+#include "pds_interface.h"
 #endif
+
 #ifdef CRYPTO_DEV_ENABLED
-  #include "sal.h"
+#include "sal.h"
 #endif
 
 #include "resources.h"
@@ -34,7 +41,10 @@
 #include "conf_sal.h"
 #include "cryptoauthlib.h"
 
+
+
 /*** SYMBOLIC CONSTANTS ********************************************************/
+
 #define APP_SLEEP_TIME_MS						PMM_SLEEPTIME_MAX_MS
 #define INITIAL_PERIODIC_UPLINK_TIMEOUT			10000
 #define PERIODIC_UPLINK_TIMEOUT					60000	// Periodic uplink in ms
@@ -44,7 +54,10 @@
 #define APP_PORT								1		// LoRaWAN Application Port
 #define AVG_CNT									20		// Number of A/D samples
 
+
+
 /*** GLOBAL VARIABLES & TYPE DEFINITIONS ***************************************/
+
 // LEDs states
 static uint8_t on = LON ;
 static uint8_t off = LOFF ;
@@ -64,13 +77,25 @@ uint8_t lorawanPayload[20] = {0} ;
 
 // hard-coded OTAA credentials
 // Tested with TTI Network Server (MAC 1.04, PHY 1.01)
-uint8_t demoDevEui[8] =  {0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA} ; //{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } ;
-uint8_t demoAppEui[8] =  {0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA} ; //{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } ;
-uint8_t demoAppKey[16] = {0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA} ; //{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } ;
+uint8_t demoDevEui[8] = {
+	0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA
+};	//{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+uint8_t demoAppEui[8] = {
+	0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA
+};	//{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+uint8_t demoAppKey[16] = {
+	0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA,
+	0x00, 0x00, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA
+};	//{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
 
 #ifdef CONF_PMM_ENABLE
 bool deviceResetsForWakeup = false;
 #endif
+
+
 
 /*** LOCAL FUNCTION PROTOTYPES *************************************************/
 static void configure_subband(uint8_t subband) ;
@@ -92,17 +117,18 @@ static inline uint8_t get_statusLED() { return statusLedState ; }
 static inline uint8_t get_appLED() { return appLedState ; }
 static float convert_celsius_to_fahrenheit(float celsius_val) ;
 #ifdef CRYPTO_DEV_ENABLED
-  static void print_ecc_info(void) ;
+static void print_ecc_info(void);
 #endif
+
+
 
 /*** GLOBAL FUNCTION DEFINITIONS ***********************************************/
 
 /*** lorawan_app_init ***********************************************************
  \brief      LoRaWAN Stack Driver Init.
 ********************************************************************************/
-void lorawan_app_init(void)
-{
-	printf("\r\n--- ATSAMR34_LORAWAN_PULSE_COUNTER ---\r\n") ;
+void lorawan_app_init(void) {
+	printf("\r\n--- ATSAMR34_LORAWAN_PULSE_COUNTER ---\r\n");
 	set_statusLED_Off() ;
 	set_appLED_Off() ;
 	resource_init() ;
@@ -110,12 +136,11 @@ void lorawan_app_init(void)
 #ifndef CRYPTO_DEV_ENABLED	
 	AESInit() ;
 #else
-	if (SAL_SUCCESS != SAL_Init())
-	{
+	if (SAL_SUCCESS != SAL_Init()) {
 		printf("Initialization of Security module is failed\r\n");
 		/* Stop Further execution */
 		while (1) {
-		}		
+		}
 	}
 	print_ecc_info() ;
 #endif
@@ -125,14 +150,13 @@ void lorawan_app_init(void)
 #endif
 #if (ENABLE_PDS == 1)
 	PDS_Init() ;
-	//PDS_DeleteAll() ;
+//	PDS_DeleteAll();
 #endif
-	Stack_Init() ;
-	
-	SwTimerCreate(&ledTimerID) ;
-	//SwTimerCreate(&periodicUplinkTimerID) ;
-	//SwTimerStart(periodicUplinkTimerID, MS_TO_US(60000), SW_TIMEOUT_RELATIVE, (void*)periodicUplink_callback, NULL) ;
-	
+	Stack_Init();
+
+	SwTimerCreate(&ledTimerID);
+//	SwTimerCreate(&periodicUplinkTimerID);
+//	SwTimerStart(periodicUplinkTimerID, MS_TO_US(60000), SW_TIMEOUT_RELATIVE, (void*)periodicUplink_callback, NULL);
 }
 
 /*** lorawan_app_configuration **************************************************
